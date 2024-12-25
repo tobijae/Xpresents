@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import GiftDisplay from './GiftDisplay';
 
@@ -8,54 +8,72 @@ const ChristmasAnalyzer = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [allResults, setAllResults] = useState([]);
   const [showGiftReveal, setShowGiftReveal] = useState(false);
 
-  useEffect(() => {
-    // If presents are set, show gift reveal first
-    if (presents !== null) {
-      setShowGiftReveal(true);
-      // After 3 seconds, show leaderboard
-      const timer = setTimeout(() => {
-        setShowGiftReveal(false);
-        setShowLeaderboard(true);
-      }, 3000);
-      return () => clearTimeout(timer);
+  const calculatePresents = () => {
+    const chance = Math.floor(Math.random() * 1000000);
+    
+    if (chance === 999999) return Math.floor(Math.random() * (1000000 - 800000) + 800000);
+    if (chance === 999998) return Math.floor(Math.random() * (800000 - 500000) + 500000);
+    if (chance >= 999990) return Math.floor(Math.random() * (500000 - 100000) + 100000);
+    if (chance >= 999900) return Math.floor(Math.random() * (100000 - 10000) + 10000);
+    if (chance >= 999000) return Math.floor(Math.random() * (10000 - 1000) + 1000);
+    if (chance >= 990000) return Math.floor(Math.random() * (1000 - 100) + 100);
+    if (chance >= 900000) return Math.floor(Math.random() * (100 - 20) + 20);
+    
+    const lowerChance = Math.floor(Math.random() * 100);
+    if (lowerChance >= 90) return Math.floor(Math.random() * (20 - 10) + 10);
+    if (lowerChance >= 70) return Math.floor(Math.random() * (10 - 5) + 5);
+    if (lowerChance >= 40) return Math.floor(Math.random() * 5) + 1;
+    return 0;
+  };
+
+  const getMessageBasedOnScore = (score) => {
+    if (score >= 800000) return "LEGENDARY!!! 🌟 You've hit the jackpot! Santa's entire workshop is yours!";
+    if (score >= 500000) return "IMPOSSIBLE! 🎇 You're Santa's favorite this millennium!";
+    if (score >= 100000) return "ULTRA RARE! 🌠 You've been blessed by Santa's magic!";
+    if (score >= 10000) return "EPIC! ⭐ Santa's elves worked overtime for you!";
+    if (score >= 1000) return "AMAZING! 🎄 You've made Santa's VIP list!";
+    if (score >= 100) return "Wonderful! 🎁 Santa really likes you!";
+    if (score >= 10) return "Pretty good! 🎅 Santa's checking his list twice for you!";
+    if (score >= 5) return "Not bad! 🎄 You're on Santa's good list!";
+    if (score >= 1) return "Well... 🤔 At least you got something!";
+    return "Oh no! 😅 Someone's been naughty this year!";
+  };
+
+  const checkFollowing = async (username) => {
+    try {
+      const response = await fetch(`https://twitter-follow-checker.vercel.app/api/check?username=${username}&target=tobiasfib`);
+      const data = await response.json();
+      return data.isFollowing;
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+      return false;
     }
-  }, [presents]);
+  };
 
   const analyzePosts = async () => {
     setLoading(true);
     try {
-      // Check if user follows @tobiasfib
-      const response = await fetch(`https://api.twitter.com/2/users/by/username/${handle}/following?target_username=tobiasfib`, {
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_TWITTER_BEARER_TOKEN}`
-        }
-      });
+      const isFollowing = await checkFollowing(handle);
       
-      const data = await response.json();
-      
-      if (!data.data || data.data.following === false) {
+      if (!isFollowing) {
         setError("You need to follow @tobiasfib first to see how many presents you'll get! 🎅");
-        setPresents(null);
         setLoading(false);
         return;
       }
 
-      // Calculate presents
-      const newPresents = calculatePresents();
-      setPresents(newPresents);
+      // Calculate presents and show animation
+      const presents = calculatePresents();
+      setPresents(presents);
+      setShowGiftReveal(true);
       
-      // Update results
-      const newResult = {
-        handle,
-        presents: newPresents,
-        timestamp: new Date().toISOString()
-      };
-      setAllResults(prev => [...prev, newResult].sort((a, b) => b.presents - a.presents));
-      
-      setError(null);
+      // After 3 seconds, show leaderboard
+      setTimeout(() => {
+        setShowGiftReveal(false);
+        setShowLeaderboard(true);
+      }, 3000);
+
     } catch (error) {
       setError("Oops! Something went wrong checking your X profile 😅");
       console.error('Error:', error);
@@ -63,9 +81,12 @@ const ChristmasAnalyzer = () => {
     setLoading(false);
   };
 
-  const calculatePresents = () => {
-    const chance = Math.floor(Math.random() * 1000000);
-    // ... rest of calculate presents function ...
+  const handleReset = () => {
+    setShowLeaderboard(false);
+    setShowGiftReveal(false);
+    setPresents(null);
+    setHandle('');
+    setError(null);
   };
 
   return (
@@ -73,7 +94,7 @@ const ChristmasAnalyzer = () => {
       <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle className="text-center text-2xl font-bold text-red-600">
-            {showLeaderboard ? "X-mas Presents Leaderboard 🎄" : "How many 𝕏-mas presents do you get? 🎁"}
+            {showLeaderboard ? "X-mas Presents Result 🎄" : "How many X-mas presents do you get? 🎁"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -81,7 +102,7 @@ const ChristmasAnalyzer = () => {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Enter your 𝕏 dot com handle:
+                  Enter your X handle:
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -134,39 +155,24 @@ const ChristmasAnalyzer = () => {
             </div>
           ) : (
             <div className="space-y-4 animate-fadeIn">
-              {allResults.map((result, index) => (
-                <div 
-                  key={result.handle} 
-                  className={`p-4 rounded-lg ${
-                    result.handle === handle ? 'bg-green-100 border-2 border-green-500' : 'bg-white'
-                  }`}
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">
-                      {index + 1}. @{result.handle}
-                    </span>
-                    <span className="font-bold text-red-600">
-                      {result.presents.toLocaleString()} 🎁
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {getMessageBasedOnScore(result.presents)}
-                  </div>
+              <div className="p-4 rounded-lg bg-green-100 border-2 border-green-500">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">@{handle}</span>
+                  <span className="font-bold text-red-600">
+                    {presents?.toLocaleString()} 🎁
+                  </span>
                 </div>
-              ))}
+                <div className="text-sm text-gray-600 mt-2">
+                  {getMessageBasedOnScore(presents)}
+                </div>
+              </div>
               
-              {presents === 0 && (
-                <button
-                  onClick={() => {
-                    setShowLeaderboard(false);
-                    setPresents(null);
-                    setHandle('');
-                  }}
-                  className="w-full mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Check Your Presents
-                </button>
-              )}
+              <button
+                onClick={handleReset}
+                className="w-full mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Check Again
+              </button>
             </div>
           )}
         </CardContent>
