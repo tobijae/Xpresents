@@ -73,7 +73,7 @@ const ChristmasAnalyzer = () => {
       <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle className="text-center text-2xl font-bold text-red-600">
-            {showLeaderboard ? "X-mas Presents Leaderboard 🎄" : "How many X-mas presents do you get? 🎁"}
+            {showLeaderboard ? "X-mas Presents Leaderboard 🎄" : "How many 𝕏-mas presents do you get? 🎁"}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -81,7 +81,7 @@ const ChristmasAnalyzer = () => {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Enter your X handle:
+                  Enter your 𝕏 dot com handle:
                 </label>
                 <div className="flex gap-2">
                   <input
