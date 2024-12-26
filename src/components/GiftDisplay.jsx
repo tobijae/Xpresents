@@ -1,7 +1,7 @@
 import React from 'react';
 import { Gift, Sparkles, Stars } from 'lucide-react';
 
-const GiftDisplay = ({ presents }) => {
+const GiftDisplay = ({ presents, username }) => {
   const getDisplayStyle = () => {
     if (presents >= 800000) {
       return "bg-gradient-to-r from-purple-500 via-gold-400 to-pink-500 animate-pulse";
@@ -49,6 +49,11 @@ const GiftDisplay = ({ presents }) => {
 
   return (
     <div className={`text-center space-y-4 p-6 rounded-lg ${getDisplayStyle()}`}>
+      {username && (
+        <h3 className="text-xl font-bold mb-4">
+          @{username} gets:
+        </h3>
+      )}
       <div className="flex justify-center items-center gap-2">
         {getIconDisplay()}
       </div>
