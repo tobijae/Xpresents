@@ -6,9 +6,9 @@ const ChristmasAnalyzer = () => {
   const [handle, setHandle] = useState('');
   const [presents, setPresents] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [showGiftReveal, setShowGiftReveal] = useState(false);
+  const [error, setError] = useState(null);
 
   const calculatePresents = () => {
     const chance = Math.floor(Math.random() * 1000000);
@@ -41,48 +41,24 @@ const ChristmasAnalyzer = () => {
     return "Oh no! 😅 Someone's been naughty this year!";
   };
 
-  const checkFollowing = async (username) => {
-    try {
-      const response = await fetch(`https://twitter-follow-checker.vercel.app/api/check?username=${username}&target=tobiasfib`);
-      const data = await response.json();
-      return data.isFollowing;
-    } catch (error) {
-      console.error('Error checking follow status:', error);
-      return false;
-    }
+  const handleCheck = () => {
+    setShowConfirmation(true);
   };
 
-  const analyzePosts = async () => {
-    setLoading(true);
-    try {
-      const isFollowing = await checkFollowing(handle);
-      
-      if (!isFollowing) {
-        setError("You need to follow @tobiasfib first to see how many presents you'll get! 🎅");
-        setLoading(false);
-        return;
-      }
-
-      // Calculate presents and show animation
-      const presents = calculatePresents();
-      setPresents(presents);
+  const handleConfirm = (isFollowing) => {
+    setShowConfirmation(false);
+    if (isFollowing) {
+      setLoading(true);
+      const newPresents = calculatePresents();
+      setPresents(newPresents);
       setShowGiftReveal(true);
-      
-      // After 3 seconds, show leaderboard
-      setTimeout(() => {
-        setShowGiftReveal(false);
-        setShowLeaderboard(true);
-      }, 3000);
-
-    } catch (error) {
-      setError("Oops! Something went wrong checking your X profile 😅");
-      console.error('Error:', error);
+      setLoading(false);
+    } else {
+      setError("You need to follow @tobiasfib first to see how many presents you'll get! 🎅");
     }
-    setLoading(false);
   };
 
   const handleReset = () => {
-    setShowLeaderboard(false);
     setShowGiftReveal(false);
     setPresents(null);
     setHandle('');
@@ -94,12 +70,12 @@ const ChristmasAnalyzer = () => {
       <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle className="text-center text-2xl font-bold text-red-600">
-            {showLeaderboard ? "X-mas Presents Result 🎄" : "How many X-mas presents do you get? 🎁"}
+            How many X-mas presents do you get? 🎁
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {!showLeaderboard && !showGiftReveal ? (
-            <div className="space-y-6">
+          <div className="space-y-6">
+            {!showGiftReveal && (
               <div>
                 <label className="block text-sm font-medium mb-2">
                   Enter your X handle:
@@ -113,7 +89,7 @@ const ChristmasAnalyzer = () => {
                     placeholder="username"
                   />
                   <button
-                    onClick={analyzePosts}
+                    onClick={handleCheck}
                     disabled={!handle || loading}
                     className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
@@ -129,52 +105,64 @@ const ChristmasAnalyzer = () => {
                   </button>
                 </div>
               </div>
+            )}
 
-              {error && (
-                <div className="text-center p-4 bg-red-50 rounded-lg text-red-600">
-                  {error}
-                  <div className="mt-2">
-                    <a 
-                      href="https://twitter.com/tobiasfib" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
-                    >
-                      Follow @tobiasfib
-                    </a>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : showGiftReveal ? (
-            <div className="animate-fadeIn">
-              <GiftDisplay presents={presents} />
-              <p className="text-center text-gray-600 mt-4 animate-bounce">
-                {getMessageBasedOnScore(presents)}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4 animate-fadeIn">
-              <div className="p-4 rounded-lg bg-green-100 border-2 border-green-500">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">@{handle}</span>
-                  <span className="font-bold text-red-600">
-                    {presents?.toLocaleString()} 🎁
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600 mt-2">
-                  {getMessageBasedOnScore(presents)}
+            {error && (
+              <div className="text-center p-4 bg-red-50 rounded-lg text-red-600">
+                {error}
+                <div className="mt-2">
+                  <a 
+                    href="https://twitter.com/tobiasfib" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline"
+                  >
+                    Follow @tobiasfib
+                  </a>
                 </div>
               </div>
-              
-              <button
-                onClick={handleReset}
-                className="w-full mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Check Again
-              </button>
-            </div>
-          )}
+            )}
+
+            {showConfirmation && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg p-6 max-w-sm w-full animate-fadeIn">
+                  <h3 className="text-lg font-bold mb-4">Confirmation Required</h3>
+                  <p className="mb-6">Do you follow @tobiasfib on X?</p>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => handleConfirm(false)}
+                      className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded"
+                    >
+                      No
+                    </button>
+                    <button
+                      onClick={() => handleConfirm(true)}
+                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      Yes, I follow @tobiasfib
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showGiftReveal && presents !== null && (
+              <>
+                <div className="animate-fadeIn">
+                  <GiftDisplay presents={presents} />
+                  <p className="text-center text-gray-600 mt-4 animate-bounce">
+                    {getMessageBasedOnScore(presents)}
+                  </p>
+                </div>
+                <button
+                  onClick={handleReset}
+                  className="w-full mt-4 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Check Again
+                </button>
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
