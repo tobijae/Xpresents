@@ -149,7 +149,7 @@ const ChristmasAnalyzer = () => {
             {showGiftReveal && presents !== null && (
               <>
                 <div className="animate-fadeIn">
-                  <GiftDisplay presents={presents} />
+                  <GiftDisplay presents={presents} username={handle} />
                   <p className="text-center text-gray-600 mt-4 animate-bounce">
                     {getMessageBasedOnScore(presents)}
                   </p>
