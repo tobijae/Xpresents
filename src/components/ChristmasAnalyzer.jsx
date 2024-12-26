@@ -48,6 +48,7 @@ const ChristmasAnalyzer = () => {
   const handleConfirm = (isFollowing) => {
     setShowConfirmation(false);
     if (isFollowing) {
+      setError(null);  
       setLoading(true);
       const newPresents = calculatePresents();
       setPresents(newPresents);
